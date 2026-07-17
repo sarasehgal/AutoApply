@@ -34,8 +34,17 @@ class CoverageStatus(str, Enum):
     MISSING = "missing"
 
 
+class RequirementCategory(str, Enum):
+    """what kind of posting requirement this is - required skills should count for more than nice-to-haves"""
+
+    REQUIRED_SKILL = "required_skill"
+    PREFERRED_SKILL = "preferred_skill"
+    RESPONSIBILITY = "responsibility"
+
+
 class RequirementBreakdown(BaseModel):
     requirement: str
+    category: RequirementCategory
     status: CoverageStatus
     supporting_chunk_ids: list[str] = Field(
         default_factory=list, description="chunk ids backing this up"

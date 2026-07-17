@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from autoapply.agents.schemas import MatchResult, ParsedPosting
+from autoapply.agents.schemas import CoverageStatus, MatchResult, ParsedPosting, RequirementCategory
 from autoapply.llm.provider import LLMClient
 from autoapply.prompts import matcher as prompts
 from autoapply.rag.store import VectorStore
@@ -17,6 +17,30 @@ logger = logging.getLogger("autoapply.agents.matcher")
 
 AGENT_NAME = "matcher"
 DEFAULT_CHUNKS_PER_QUERY = 4
+
+# required skills matter more than preferred ones, which matter more than general responsibilities
+_CATEGORY_WEIGHT = {
+    RequirementCategory.REQUIRED_SKILL: 1.0,
+    RequirementCategory.RESPONSIBILITY: 0.75,
+    RequirementCategory.PREFERRED_SKILL: 0.5,
+}
+_STATUS_CREDIT = {
+    CoverageStatus.COVERED: 1.0,
+    CoverageStatus.PARTIAL: 0.5,
+    CoverageStatus.MISSING: 0.0,
+}
+
+
+def compute_weighted_score(breakdown: list) -> int:
+    """recomputes the match score from the breakdown instead of trusting the llm's arithmetic -
+    required skills pull more weight than preferred ones or general responsibilities"""
+    if not breakdown:
+        return 0
+    total_weight = sum(_CATEGORY_WEIGHT[item.category] for item in breakdown)
+    if total_weight == 0:
+        return 0
+    earned = sum(_CATEGORY_WEIGHT[item.category] * _STATUS_CREDIT[item.status] for item in breakdown)
+    return round(100 * earned / total_weight)
 
 
 def gather_grounding_chunks(
@@ -61,13 +85,14 @@ def match_posting(
     chunks = gather_grounding_chunks(posting, store, resume_id)
 
     client = client or LLMClient()
-    return client.complete(
+    result = client.complete(
         system=prompts.SYSTEM_PROMPT,
         user=prompts.build_user_prompt(posting, format_chunks(chunks)),
         response_model=MatchResult,
         temperature=0.1,
         agent_name=AGENT_NAME,
     )
+    return result.model_copy(update={"score": compute_weighted_score(result.breakdown)})
 
 
 async def amatch_posting(
@@ -83,10 +108,11 @@ async def amatch_posting(
     chunks = await loop.run_in_executor(None, gather_grounding_chunks, posting, store, resume_id)
 
     client = client or LLMClient()
-    return await client.acomplete(
+    result = await client.acomplete(
         system=prompts.SYSTEM_PROMPT,
         user=prompts.build_user_prompt(posting, format_chunks(chunks)),
         response_model=MatchResult,
         temperature=0.1,
         agent_name=AGENT_NAME,
     )
+    return result.model_copy(update={"score": compute_weighted_score(result.breakdown)})

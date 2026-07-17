@@ -5,8 +5,14 @@ from __future__ import annotations
 
 import pytest
 
-from autoapply.agents.matcher import amatch_posting, format_chunks, gather_grounding_chunks, match_posting
-from autoapply.agents.schemas import CoverageStatus, MatchResult, ParsedPosting, RequirementBreakdown
+from autoapply.agents.matcher import amatch_posting, compute_weighted_score, format_chunks, gather_grounding_chunks, match_posting
+from autoapply.agents.schemas import (
+    CoverageStatus,
+    MatchResult,
+    ParsedPosting,
+    RequirementBreakdown,
+    RequirementCategory,
+)
 
 
 class FakeStore:
@@ -85,11 +91,12 @@ def test_match_posting_returns_validated_result_and_grounds_prompt():
             assert response_model is MatchResult
             assert agent_name == "matcher"
             return MatchResult(
-                score=75,
+                score=75,  # raw llm score - gets overridden by compute_weighted_score() below
                 summary="Solid match",
                 breakdown=[
                     RequirementBreakdown(
                         requirement="PyTorch",
+                        category=RequirementCategory.REQUIRED_SKILL,
                         status=CoverageStatus.COVERED,
                         supporting_chunk_ids=["chunk-1"],
                         explanation="resume shows Python/ML work",
@@ -101,7 +108,7 @@ def test_match_posting_returns_validated_result_and_grounds_prompt():
     result = match_posting(posting, store=store, client=FakeClient())
 
     assert isinstance(result, MatchResult)
-    assert result.score == 75
+    assert result.score == 100  # one required skill, fully covered -> deterministic 100
     assert "chunk-1" in captured_user_prompt["value"]
     # every cited chunk id must have actually come from retrieval
     cited_ids = {cid for b in result.breakdown for cid in b.supporting_chunk_ids}
@@ -120,4 +127,45 @@ async def test_amatch_posting_matches_sync_behavior():
 
     result = await amatch_posting(posting, store=store, client=FakeClient())
 
-    assert result.score == 50
+    assert result.score == 0  # empty breakdown -> nothing to weight -> 0, not the raw llm score
+
+
+def _item(category, status):
+    return RequirementBreakdown(requirement="x", category=category, status=status, explanation="")
+
+
+def test_weighted_score_required_skills_count_more_than_preferred():
+    # one required skill missing, one preferred skill covered - a naive average would look ok,
+    # but missing a required skill should hurt more than nailing a preferred one helps
+    breakdown = [
+        _item(RequirementCategory.REQUIRED_SKILL, CoverageStatus.MISSING),
+        _item(RequirementCategory.PREFERRED_SKILL, CoverageStatus.COVERED),
+    ]
+    score = compute_weighted_score(breakdown)
+    assert score < 50  # required weight (1.0) > preferred weight (0.5), so this should skew low
+
+
+def test_weighted_score_all_covered_is_100():
+    breakdown = [
+        _item(RequirementCategory.REQUIRED_SKILL, CoverageStatus.COVERED),
+        _item(RequirementCategory.PREFERRED_SKILL, CoverageStatus.COVERED),
+        _item(RequirementCategory.RESPONSIBILITY, CoverageStatus.COVERED),
+    ]
+    assert compute_weighted_score(breakdown) == 100
+
+
+def test_weighted_score_all_missing_is_0():
+    breakdown = [
+        _item(RequirementCategory.REQUIRED_SKILL, CoverageStatus.MISSING),
+        _item(RequirementCategory.PREFERRED_SKILL, CoverageStatus.MISSING),
+    ]
+    assert compute_weighted_score(breakdown) == 0
+
+
+def test_weighted_score_empty_breakdown_is_0():
+    assert compute_weighted_score([]) == 0
+
+
+def test_weighted_score_partial_counts_as_half_credit():
+    breakdown = [_item(RequirementCategory.REQUIRED_SKILL, CoverageStatus.PARTIAL)]
+    assert compute_weighted_score(breakdown) == 50

@@ -58,6 +58,7 @@ def word_diff_markdown(original: str, tailored: str) -> str:
 
 
 STATUS_ICON = {"covered": "✅", "partial": "\U0001f7e1", "missing": "❌"}
+CATEGORY_LABEL = {"required_skill": "required", "preferred_skill": "preferred", "responsibility": "responsibility"}
 
 
 st.title("AutoApply")
@@ -153,7 +154,8 @@ if state:
         st.write("**Requirement breakdown**")
         for item in match.breakdown:
             icon = STATUS_ICON.get(item.status.value, "•")
-            st.markdown(f"{icon} **{item.requirement}** — {item.explanation}")
+            category_label = CATEGORY_LABEL.get(item.category.value, item.category.value)
+            st.markdown(f"{icon} **{item.requirement}** _({category_label})_ — {item.explanation}")
             if item.supporting_chunk_ids:
                 st.caption("Sources: " + ", ".join(item.supporting_chunk_ids))
 

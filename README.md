@@ -89,6 +89,11 @@ see Design notes below).
   doesn't blow through rate limits. One posting failing doesn't take down the batch.
 - **Latency logging**: every LLM call logs agent/provider/latency/cache-hit; batch scoring logs
   per-posting latency too.
+- **Deterministic weighted scoring**: the match score isn't the LLM's raw guess either -
+  `compute_weighted_score()` in [`agents/matcher.py`](autoapply/agents/matcher.py) recomputes it
+  from the requirement breakdown, weighting required skills higher than preferred skills and
+  responsibilities, so missing a required skill actually hurts the score more than nailing a
+  nice-to-have helps.
 
 ## Project layout
 
@@ -201,7 +206,6 @@ check actually caught a word the model swapped in that wasn't in the source resu
 ## What I'd build next
 
 - Real resume upload for PDF/DOCX, not just paste/txt/md.
-- Let the Matcher weight required vs. preferred skills instead of treating them the same.
 - A "history" view backed by `search_postings()` — see all past postings you matched against and
   re-open any of them.
 - Swap the word-diff for something closer to a real resume renderer (actual PDF output, not a
