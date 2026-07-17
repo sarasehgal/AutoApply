@@ -1,0 +1,22 @@
+Frontend Engineer — Lumen Design Co.
+
+Lumen makes design collaboration tools for product teams. We're hiring a Frontend Engineer to
+own core parts of our web app.
+
+What you'll do:
+- Build and ship UI features in React/TypeScript for a canvas-based design tool.
+- Work closely with design on interaction details (drag/drop, real-time cursors, undo/redo).
+- Improve performance of a large, canvas-heavy single page app.
+- Write component tests and help keep the design system consistent.
+
+Required:
+- 3+ years professional experience with React and TypeScript.
+- Strong CSS/layout skills, comfortable with complex, animation-heavy UIs.
+- Experience with state management (Redux, Zustand, or similar).
+
+Nice to have:
+- Experience with canvas rendering (Konva, Fabric.js, or hand-rolled canvas code).
+- Experience with real-time collaboration (WebSockets, CRDTs).
+- Design sensibility - you notice when something is 2px off.
+
+Seniority: Mid-level (3-5 years)

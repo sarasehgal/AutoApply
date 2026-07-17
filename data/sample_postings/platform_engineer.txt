@@ -1,0 +1,23 @@
+Platform Engineer — Cloudline
+
+Cloudline runs infra for a few hundred mid-size SaaS companies. Looking for a Platform Engineer
+to help scale our deployment tooling and internal developer platform.
+
+What you'll do:
+- Build and maintain Kubernetes-based deployment pipelines used by ~50 internal engineers.
+- Improve observability (logs, metrics, tracing) across our services.
+- Automate infra provisioning with Terraform and reduce manual ops work.
+- On-call rotation for platform-level incidents.
+
+Required:
+- 3+ years working with Kubernetes and Docker in production.
+- Strong Python or Go skills for tooling/automation.
+- Experience with AWS (EC2, IAM, VPC basics).
+- Comfortable writing and maintaining CI/CD pipelines.
+
+Nice to have:
+- Terraform or other infra-as-code experience.
+- Experience with async Python for internal tooling.
+- Experience mentoring engineers on infra best practices.
+
+Seniority: Mid-level (3-5 years)
