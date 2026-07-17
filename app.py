@@ -13,6 +13,7 @@ import streamlit as st
 from autoapply.graph.orchestrator import run_pipeline
 from autoapply.llm.provider import LLMClient, clear_cache
 from autoapply.rag.store import VectorStore
+from autoapply.resume_parsing import UnsupportedResumeFormatError, extract_resume_text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -71,9 +72,12 @@ with st.sidebar:
     if SAMPLE_RESUME_PATH.exists() and st.button("Load sample resume"):
         st.session_state["resume_draft"] = SAMPLE_RESUME_PATH.read_text()
 
-    uploaded = st.file_uploader("Or upload a .txt/.md resume", type=["txt", "md"])
+    uploaded = st.file_uploader("Or upload a resume", type=["txt", "md", "pdf", "docx"])
     if uploaded is not None:
-        st.session_state["resume_draft"] = uploaded.read().decode("utf-8")
+        try:
+            st.session_state["resume_draft"] = extract_resume_text(uploaded.name, uploaded.read())
+        except UnsupportedResumeFormatError as exc:
+            st.error(str(exc))
 
     resume_text = st.text_area(
         "Paste your resume (plain text or markdown)",
