@@ -33,5 +33,8 @@ cache_store/
 .vscode/
 .idea/
 
+# Local Claude Code permissions (session-specific, not shared)
+.claude/settings.local.json
+
 # Logs
 *.log
