@@ -35,7 +35,7 @@ class Settings:
     anthropic_model: str = field(
         default_factory=lambda: os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5")
     )
-    gemini_model: str = field(default_factory=lambda: os.getenv("GEMINI_MODEL", "gemini-2.5-flash"))
+    gemini_model: str = field(default_factory=lambda: os.getenv("GEMINI_MODEL", "gemini-flash-latest"))
 
     embedding_provider: str = field(
         default_factory=lambda: os.getenv("EMBEDDING_PROVIDER", "openai").lower()
