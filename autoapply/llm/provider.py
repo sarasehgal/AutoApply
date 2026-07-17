@@ -1,5 +1,5 @@
 """
-the one place that knows about openai/anthropic. agents just call complete()/acomplete()/embed()
+the one place that knows about openai/anthropic/gemini. agents just call complete()/acomplete()/embed()
 and don't care which provider is behind it. handles retries, timeouts, fallback, structured
 output validation, caching, latency logs - basically all the annoying reliability stuff
 """
@@ -12,6 +12,8 @@ import time
 from typing import Any, TypeVar
 
 from anthropic import Anthropic, AsyncAnthropic
+from google import genai
+from google.genai import types as genai_types
 from openai import AsyncOpenAI, OpenAI
 from pydantic import BaseModel, ValidationError
 from tenacity import AsyncRetrying, Retrying, retry_if_exception_type, stop_after_attempt, wait_exponential
@@ -149,6 +151,8 @@ class LLMClient:
                 raw = self._call_openai(system, user, response_model, temperature)
             elif provider == "anthropic":
                 raw = self._call_anthropic(system, user, response_model, temperature)
+            elif provider == "gemini":
+                raw = self._call_gemini(system, user, response_model, temperature)
             else:
                 raise ProviderError(f"unknown provider: {provider}")
         except ProviderError:
@@ -227,6 +231,8 @@ class LLMClient:
                 raw = await self._acall_openai(system, user, response_model, temperature)
             elif provider == "anthropic":
                 raw = await self._acall_anthropic(system, user, response_model, temperature)
+            elif provider == "gemini":
+                raw = await self._acall_gemini(system, user, response_model, temperature)
             else:
                 raise ProviderError(f"unknown provider: {provider}")
         except ProviderError:
@@ -348,6 +354,46 @@ class LLMClient:
             prefill = "{"
             messages.append({"role": "assistant", "content": prefill})
         return messages, prefill, system
+
+    # -------------------------------------------------------------- gemini
+    def _gemini_client(self) -> genai.Client:
+        api_key = settings.api_key_for("gemini")
+        if not api_key:
+            raise ProviderError("GEMINI_API_KEY is not set")
+        timeout_ms = settings.request_timeout_seconds * 1000
+        return genai.Client(api_key=api_key, http_options=genai_types.HttpOptions(timeout=timeout_ms))
+
+    def _gemini_config(
+        self, system: str, response_model: type[BaseModel] | None, temperature: float
+    ) -> genai_types.GenerateContentConfig:
+        if response_model is not None:
+            system = system + _schema_instructions(response_model)
+        kwargs: dict[str, Any] = {"system_instruction": system, "temperature": temperature}
+        if response_model is not None:
+            kwargs["response_mime_type"] = "application/json"
+        return genai_types.GenerateContentConfig(**kwargs)
+
+    def _call_gemini(
+        self, system: str, user: str, response_model: type[BaseModel] | None, temperature: float
+    ) -> str:
+        client = self._gemini_client()
+        config = self._gemini_config(system, response_model, temperature)
+        try:
+            resp = client.models.generate_content(model=settings.gemini_model, contents=user, config=config)
+        except Exception as exc:  # noqa: BLE001
+            raise ProviderError(f"gemini call failed: {exc}") from exc
+        return resp.text or ""
+
+    async def _acall_gemini(
+        self, system: str, user: str, response_model: type[BaseModel] | None, temperature: float
+    ) -> str:
+        client = self._gemini_client()
+        config = self._gemini_config(system, response_model, temperature)
+        try:
+            resp = await client.aio.models.generate_content(model=settings.gemini_model, contents=user, config=config)
+        except Exception as exc:  # noqa: BLE001
+            raise ProviderError(f"gemini call failed: {exc}") from exc
+        return resp.text or ""
 
     # ----------------------------------------------------------- embedding
     def embed(self, texts: list[str]) -> list[list[float]]:

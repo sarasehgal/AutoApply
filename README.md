@@ -4,6 +4,7 @@
 ![LangGraph](https://img.shields.io/badge/LangGraph-multi--agent-1C3C3C)
 ![OpenAI](https://img.shields.io/badge/OpenAI-API-412991?logo=openai&logoColor=white)
 ![Anthropic](https://img.shields.io/badge/Anthropic-Claude-D97757)
+![Gemini](https://img.shields.io/badge/Google-Gemini-4285F4?logo=googlegemini&logoColor=white)
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-vector%20store-FF6F61)
 ![Streamlit](https://img.shields.io/badge/Streamlit-UI-FF4B4B?logo=streamlit&logoColor=white)
 ![Pydantic](https://img.shields.io/badge/Pydantic-structured%20output-E92063)
@@ -60,7 +61,7 @@ see Design notes below).
 
 | Skill | Where |
 |---|---|
-| LLM APIs (OpenAI + Anthropic), provider-agnostic | [`autoapply/llm/provider.py`](autoapply/llm/provider.py) — one client, no provider branching in agent code, swap via `PROVIDER` env var |
+| LLM APIs (OpenAI + Anthropic + Gemini), provider-agnostic | [`autoapply/llm/provider.py`](autoapply/llm/provider.py) — one client, no provider branching in agent code, swap via `PROVIDER` env var |
 | Multi-agent orchestration | [`autoapply/graph/orchestrator.py`](autoapply/graph/orchestrator.py) — LangGraph `StateGraph`, 4 agents, concurrent branch |
 | RAG | [`autoapply/rag/`](autoapply/rag) — bullet-level chunking + retrieval grounds the Matcher/Tailoring/Cover-Letter agents |
 | Vector DB | [`autoapply/rag/store.py`](autoapply/rag/store.py) — persistent ChromaDB, `add_resume()` / `semantic_search()` |
@@ -71,7 +72,7 @@ see Design notes below).
 ## Reliability
 
 - **Provider-agnostic**: one `LLMClient` with `complete()` / `acomplete()` / `embed()`. Agents
-  never touch the OpenAI/Anthropic SDKs directly and never branch on which one is active.
+  never touch the OpenAI/Anthropic/Gemini SDKs directly and never branch on which one is active.
 - **Retry + timeout + fallback**: exponential backoff via [tenacity](https://github.com/jd/tenacity),
   a request timeout, and automatic fallback to the secondary provider if the primary's exhausted.
 - **Structured output**: every agent returns a Pydantic model. The schema goes into the prompt,
@@ -129,7 +130,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# fill in OPENAI_API_KEY and/or ANTHROPIC_API_KEY, set PROVIDER=openai or anthropic
+# fill in a key for whichever provider(s) you want, set PROVIDER=openai / anthropic / gemini
 ```
 
 `EMBEDDING_PROVIDER` can be `openai` (needs a key) or `local` (sentence-transformers, runs on

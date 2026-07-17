@@ -92,6 +92,26 @@ def test_fallback_to_secondary_provider(monkeypatch):
     assert result == "from fallback"
 
 
+def test_gemini_as_primary_provider(monkeypatch):
+    client = LLMClient(provider="gemini")
+    monkeypatch.setattr(client, "_call_gemini", lambda *a, **k: "hi from gemini")
+
+    result = client.complete(system="sys", user="hi", agent_name="test")
+
+    assert result == "hi from gemini"
+
+
+def test_falls_back_to_gemini(monkeypatch):
+    client = LLMClient(provider="openai")
+    client.fallback = "gemini"
+    monkeypatch.setattr(client, "_call_openai", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("down")))
+    monkeypatch.setattr(client, "_call_gemini", lambda *a, **k: "from gemini fallback")
+
+    result = client.complete(system="sys", user="hi", agent_name="test")
+
+    assert result == "from gemini fallback"
+
+
 def test_all_providers_failed_raises(monkeypatch):
     client = LLMClient(provider="openai")
     client.fallback = "anthropic"

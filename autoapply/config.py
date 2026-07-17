@@ -29,11 +29,13 @@ class Settings:
 
     openai_api_key: str | None = field(default_factory=lambda: os.getenv("OPENAI_API_KEY") or None)
     anthropic_api_key: str | None = field(default_factory=lambda: os.getenv("ANTHROPIC_API_KEY") or None)
+    gemini_api_key: str | None = field(default_factory=lambda: os.getenv("GEMINI_API_KEY") or None)
 
     openai_model: str = field(default_factory=lambda: os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
     anthropic_model: str = field(
         default_factory=lambda: os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5")
     )
+    gemini_model: str = field(default_factory=lambda: os.getenv("GEMINI_MODEL", "gemini-2.5-flash"))
 
     embedding_provider: str = field(
         default_factory=lambda: os.getenv("EMBEDDING_PROVIDER", "openai").lower()
@@ -61,6 +63,8 @@ class Settings:
             return self.openai_model
         if provider == "anthropic":
             return self.anthropic_model
+        if provider == "gemini":
+            return self.gemini_model
         raise ValueError(f"Unknown provider: {provider}")
 
     def api_key_for(self, provider: str) -> str | None:
@@ -68,6 +72,8 @@ class Settings:
             return self.openai_api_key
         if provider == "anthropic":
             return self.anthropic_api_key
+        if provider == "gemini":
+            return self.gemini_api_key
         raise ValueError(f"Unknown provider: {provider}")
 
 
