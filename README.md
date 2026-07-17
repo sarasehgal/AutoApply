@@ -147,10 +147,11 @@ your machine, no key needed — good for trying it out without spending anything
 streamlit run app.py
 ```
 
-1. Paste/upload/load-sample your resume in the sidebar, hit **Index resume**.
+1. Paste, upload (.txt/.md/.pdf/.docx), or load-sample your resume in the sidebar, hit
+   **Index resume**.
 2. Paste a posting (or its URL), hit **Analyze**.
-3. Get the score + breakdown, a tailored resume (word-level diff per bullet, plus any
-   fabrication warnings), and a cover letter — all downloadable.
+3. Get the score + weighted breakdown, a tailored resume (word-level diff per bullet, plus any
+   fabrication warnings, downloadable as .txt or .pdf), and a cover letter.
 
 ## Batch mode
 
@@ -205,12 +206,8 @@ check actually caught a word the model swapped in that wasn't in the source resu
 
 ## What I'd build next
 
-- Real resume upload for PDF/DOCX, not just paste/txt/md.
 - A "history" view backed by `search_postings()` — see all past postings you matched against and
   re-open any of them.
-- Swap the word-diff for something closer to a real resume renderer (actual PDF output, not a
-  markdown-ish `.txt`).
-- Cache invalidation UI — right now the only way to bust the cache is to delete `cache_store/`.
 - A small eval set (a few postings + expected coverage) to catch prompt regressions instead of
   eyeballing it.
 
