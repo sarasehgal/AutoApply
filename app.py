@@ -13,6 +13,7 @@ import streamlit as st
 from autoapply.graph.orchestrator import run_pipeline
 from autoapply.llm.provider import LLMClient, clear_cache
 from autoapply.rag.store import VectorStore
+from autoapply.resume_export import render_tailored_resume_pdf
 from autoapply.resume_parsing import UnsupportedResumeFormatError, extract_resume_text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -175,9 +176,19 @@ if state:
                 st.caption("Sources: " + ", ".join(bullet.source_chunk_ids))
 
             tailored_text = tailored.summary + "\n\n" + "\n".join(f"- {b.tailored}" for b in tailored.bullets)
-            st.download_button(
-                "Download tailored resume (.txt)", tailored_text, file_name="tailored_resume.txt"
-            )
+            dl_col1, dl_col2 = st.columns(2)
+            with dl_col1:
+                st.download_button(
+                    "Download tailored resume (.txt)", tailored_text, file_name="tailored_resume.txt"
+                )
+            with dl_col2:
+                pdf_bytes = render_tailored_resume_pdf(tailored, title=f"{posting.title} - Tailored Resume")
+                st.download_button(
+                    "Download tailored resume (.pdf)",
+                    pdf_bytes,
+                    file_name="tailored_resume.pdf",
+                    mime="application/pdf",
+                )
         else:
             st.info("No tailored resume in this result.")
 
