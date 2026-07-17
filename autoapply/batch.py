@@ -76,3 +76,35 @@ async def score_postings(
         for posting in posting_inputs
     ]
     return await asyncio.gather(*tasks)
+
+
+def _demo() -> None:
+    """Score every posting in data/sample_postings/ against data/sample_resume.md.
+
+    Run with: python -m autoapply.batch
+    Requires OPENAI_API_KEY or ANTHROPIC_API_KEY to be set in .env.
+    """
+    from pathlib import Path
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+
+    data_dir = Path(__file__).resolve().parent.parent / "data"
+    resume_text = (data_dir / "sample_resume.md").read_text()
+    posting_paths = sorted((data_dir / "sample_postings").glob("*.txt"))
+    postings = [p.read_text() for p in posting_paths]
+
+    store = VectorStore()
+    store.add_resume(resume_text, resume_id="demo")
+
+    results = asyncio.run(score_postings(postings, resume_text, resume_id="demo", store=store))
+
+    for path, result in zip(posting_paths, results):
+        if result.error:
+            print(f"{path.name}: FAILED in {result.latency_seconds:.2f}s - {result.error}")
+        else:
+            score = result.state["match_result"].score
+            print(f"{path.name}: score={score}/100 in {result.latency_seconds:.2f}s")
+
+
+if __name__ == "__main__":
+    _demo()
