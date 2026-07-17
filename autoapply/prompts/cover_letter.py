@@ -1,4 +1,4 @@
-"""Prompt templates for the Cover-Letter Agent."""
+"""cover letter prompts"""
 
 from __future__ import annotations
 

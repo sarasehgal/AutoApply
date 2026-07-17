@@ -1,13 +1,7 @@
-"""ChromaDB-backed vector store.
-
-Two collections:
-
-- ``resume_chunks`` — the active resume, chunked bullet-by-bullet.
-  The Matcher and Tailoring agents retrieve from this to ground their
-  output in the user's real experience.
-- ``postings_corpus`` — an optional history of past job postings, so
-  the app can semantically search "postings like this one" across
-  everything the user has ever analyzed.
+"""
+chroma wrapper. two collections: resume_chunks (the active resume, bullet by bullet - matcher
+and tailoring pull from this) and postings_corpus (past postings so you can semantic search
+"stuff like this" across everything you've ever run)
 """
 
 from __future__ import annotations
@@ -34,7 +28,7 @@ class VectorStore:
 
     # ------------------------------------------------------------- resume
     def add_resume(self, resume_text: str, resume_id: str = "default") -> int:
-        """Chunk + embed a resume, replacing any prior chunks for this id."""
+        """chunks + embeds a resume, wipes out any old chunks for this id first"""
         collection = self._collection(RESUME_COLLECTION)
 
         existing = collection.get(where={"resume_id": resume_id})
@@ -51,7 +45,7 @@ class VectorStore:
         return len(chunks)
 
     def semantic_search(self, query: str, n_results: int = 5, resume_id: str = "default") -> list[dict]:
-        """Return the resume chunks most relevant to ``query``, most relevant first."""
+        """top resume chunks for a query, best match first"""
         collection = self._collection(RESUME_COLLECTION)
         count = collection.count()
         if count == 0:
@@ -66,11 +60,8 @@ class VectorStore:
 
     # ----------------------------------------------------------- postings
     def add_postings(self, postings: list[dict]) -> int:
-        """Embed a corpus of past postings for semantic search over history.
-
-        Each posting needs at least ``{"id": ..., "text": ...}``; any
-        other keys (title, company, url, ...) are stored as metadata.
-        """
+        """embeds a bunch of postings so you can search over them later. each posting needs
+        at least id + text, anything else (title, company, url...) just gets stored as metadata"""
         collection = self._collection(POSTINGS_COLLECTION)
         added = 0
         for posting in postings:
@@ -85,7 +76,7 @@ class VectorStore:
         return added
 
     def search_postings(self, query: str, n_results: int = 5) -> list[dict]:
-        """Semantic search over every posting previously stored with add_postings()."""
+        """semantic search over whatever you've stashed with add_postings()"""
         collection = self._collection(POSTINGS_COLLECTION)
         count = collection.count()
         if count == 0:
@@ -95,11 +86,11 @@ class VectorStore:
 
     # --------------------------------------------------------------- admin
     def reset(self) -> None:
-        """Drop both collections. Mainly for tests."""
+        """nukes both collections, mostly just for tests"""
         for name in (RESUME_COLLECTION, POSTINGS_COLLECTION):
             try:
                 self._client.delete_collection(name)
-            except Exception:  # noqa: BLE001 - collection may not exist yet
+            except Exception:  # noqa: BLE001 - collection might not exist, that's fine
                 pass
 
 

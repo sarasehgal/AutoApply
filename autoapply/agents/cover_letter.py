@@ -1,6 +1,4 @@
-"""Cover-Letter Agent: drafts a concise, specific cover letter grounded
-in the match analysis and the candidate's strongest matched experience.
-"""
+"""writes a short cover letter grounded in the match result + strongest matched resume chunks"""
 
 from __future__ import annotations
 

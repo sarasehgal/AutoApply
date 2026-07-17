@@ -1,4 +1,4 @@
-"""Parser Agent: turns raw posting text or a URL into a ParsedPosting."""
+"""turns a posting (text or url) into a ParsedPosting"""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ def _clean_html(html: str) -> str:
 
 
 def fetch_posting_text(url: str, timeout: float = 20.0) -> str:
-    """Fetch a job posting URL and return cleaned, script/style-stripped text."""
+    """grabs a posting url, strips scripts/styles/nav junk, returns plain text"""
     resp = httpx.get(url, timeout=timeout, follow_redirects=True, headers={"User-Agent": _USER_AGENT})
     resp.raise_for_status()
     return _clean_html(resp.text)
@@ -46,7 +46,7 @@ async def afetch_posting_text(url: str, timeout: float = 20.0) -> str:
 
 
 def parse_posting(posting_input: str, *, client: LLMClient | None = None) -> ParsedPosting:
-    """Parse a job posting (raw text or URL) into structured fields."""
+    """text or url in, structured posting out"""
     text = fetch_posting_text(posting_input) if _is_url(posting_input) else posting_input
     if not text.strip():
         raise ValueError("posting text is empty after fetching/cleaning")
@@ -62,7 +62,7 @@ def parse_posting(posting_input: str, *, client: LLMClient | None = None) -> Par
 
 
 async def aparse_posting(posting_input: str, *, client: LLMClient | None = None) -> ParsedPosting:
-    """Async variant used by the batch scorer so URL fetch + LLM call don't block the event loop."""
+    """same thing but async, so the batch scorer isn't blocked on url fetch + llm call"""
     text = await afetch_posting_text(posting_input) if _is_url(posting_input) else posting_input
     if not text.strip():
         raise ValueError("posting text is empty after fetching/cleaning")

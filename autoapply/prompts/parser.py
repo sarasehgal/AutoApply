@@ -1,9 +1,4 @@
-"""Prompt templates for the Parser Agent.
-
-VERSION exists so that if the prompt changes in a way that affects
-cached responses or reproducibility, callers/tests can tell which
-wording produced a given result.
-"""
+"""parser prompts. VERSION bump whenever wording changes so cached stuff doesn't get mixed up"""
 
 from __future__ import annotations
 

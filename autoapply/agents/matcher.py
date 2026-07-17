@@ -1,10 +1,6 @@
-"""Matcher Agent: RAG-grounded match scoring.
-
-Retrieves the resume chunks most relevant to a posting's title,
-required/preferred skills, and responsibilities, then asks the LLM to
-score the match and justify every "covered"/"partial" judgment by
-citing exact chunk IDs — so the score is traceable back to real resume
-text rather than the model's guess about the candidate.
+"""
+matcher agent - grabs the resume chunks relevant to a posting, asks the llm to score the match
+and back up every covered/partial call with the actual chunk ids. no vibes-based scoring
 """
 
 from __future__ import annotations
@@ -29,7 +25,7 @@ def gather_grounding_chunks(
     resume_id: str,
     chunks_per_query: int = DEFAULT_CHUNKS_PER_QUERY,
 ) -> list[dict]:
-    """Retrieve resume chunks relevant to this posting via multiple targeted queries."""
+    """fires off a bunch of targeted queries (title, each skill, each responsibility) and dedupes the hits"""
     queries = [
         f"{posting.title} at {posting.company}",
         *posting.required_skills,
@@ -82,8 +78,7 @@ async def amatch_posting(
     client: LLMClient | None = None,
 ) -> MatchResult:
     store = store or VectorStore()
-    # Chroma's client is sync-only; offload to the default executor so it
-    # doesn't block the event loop during concurrent batch scoring.
+    # chroma's client is sync only, so shove it in the executor or it'll block the loop during batch runs
     loop = asyncio.get_running_loop()
     chunks = await loop.run_in_executor(None, gather_grounding_chunks, posting, store, resume_id)
 

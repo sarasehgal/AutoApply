@@ -1,10 +1,5 @@
-"""Tests for the Matcher Agent's retrieval and scoring wiring.
-
-No real Chroma/embedding calls are made: a fake store stands in for
-VectorStore so these tests are fast and deterministic, and focus on
-AutoApply's own logic (dedup, prompt construction) rather than
-ChromaDB's.
-"""
+"""tests for matcher retrieval/scoring. fake store stands in for chroma so these are
+fast and don't need real embeddings - just testing our dedup/prompt logic"""
 
 from __future__ import annotations
 
@@ -15,7 +10,7 @@ from autoapply.agents.schemas import CoverageStatus, MatchResult, ParsedPosting,
 
 
 class FakeStore:
-    """Returns the same chunk for every query, to make dedup easy to assert on."""
+    """same chunk back for every query, makes dedup easy to check"""
 
     def __init__(self, chunks_by_query: dict[str, list[dict]] | None = None):
         self.queries: list[str] = []

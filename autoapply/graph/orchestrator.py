@@ -1,12 +1,9 @@
-"""LangGraph orchestrator wiring the four agents into a pipeline:
+"""
+langgraph wiring: Parser -> Matcher -> (Tailoring + Cover-Letter)
 
-    Parser -> Matcher -> (Tailoring ‖ Cover-Letter)
-
-Tailoring and Cover-Letter both depend only on the parsed posting and
-match result, not on each other, so they're wired as two edges out of
-"matcher" rather than a chain — LangGraph schedules nodes with
-satisfied dependencies in the same superstep and awaits them
-concurrently when the graph is run with ``ainvoke``.
+tailoring and cover-letter both only need the matcher's output, not each other, so they're
+just two edges out of "matcher" instead of a chain - langgraph runs them at the same time
+when you call ainvoke
 """
 
 from __future__ import annotations
@@ -28,7 +25,7 @@ logger = logging.getLogger("autoapply.graph")
 
 
 class AutoApplyState(TypedDict, total=False):
-    """State object threaded through every node in the graph."""
+    """gets passed through every node"""
 
     posting_input: str
     resume_text: str
@@ -40,7 +37,7 @@ class AutoApplyState(TypedDict, total=False):
 
 
 def build_graph(*, store: VectorStore | None = None, client: LLMClient | None = None):
-    """Compile the AutoApply graph, injecting a shared VectorStore/LLMClient into every node."""
+    """builds the graph, all nodes share the same store/client"""
     store = store or VectorStore()
     client = client or LLMClient()
 
@@ -98,7 +95,7 @@ async def run_pipeline(
     store: VectorStore | None = None,
     client: LLMClient | None = None,
 ) -> AutoApplyState:
-    """Run the full pipeline for one posting and return the final state."""
+    """runs the whole thing for one posting, returns the final state"""
     app = build_graph(store=store, client=client)
     initial_state: AutoApplyState = {
         "posting_input": posting_input,

@@ -1,9 +1,4 @@
-"""Central configuration loaded from environment variables.
-
-Every other module reads settings from here rather than calling
-``os.environ`` directly, so there is exactly one place that knows how
-the app is configured.
-"""
+"""all the env var / config stuff lives here, everything else just imports `settings`"""
 
 from __future__ import annotations
 

@@ -1,18 +1,14 @@
-"""Tailoring Agent: rewrites resume bullets for a specific posting.
+"""
+rewrites resume bullets for a posting. prompt says "don't make stuff up" but prompts aren't
+enough on their own, so there's also a dumb-but-reliable check afterward that:
 
-The system prompt forbids fabrication, but prompts alone are not a
-safety mechanism — this module also runs a deterministic validation
-pass over the model's output that:
+1. rejects bullets citing a chunk id that was never actually retrieved (can't ground a claim
+   in a chunk that doesn't exist)
+2. flags bullets with numbers/%s/tech-looking words that don't show up anywhere in the real
+   resume - i.e. stuff it can't prove
 
-1. Rejects any bullet that cites a resume chunk ID that doesn't
-   actually exist (the model can't ground a claim in a chunk it made up).
-2. Flags any bullet whose claim-bearing tokens (numbers, percentages,
-   capitalized technology/proper-noun-like words) don't appear anywhere
-   in the source resume text, i.e. it isn't traceable back to what the
-   candidate actually wrote.
-
-Both checks are pure string/token comparisons against the real resume,
-so they run without another LLM call and are deterministic to test.
+both are just string comparisons against the real resume text, no extra llm call needed, and
+that also makes them easy to unit test
 """
 
 from __future__ import annotations
@@ -45,7 +41,7 @@ _IGNORED_TOKENS = {
 
 
 def _extract_claim_tokens(text: str) -> set[str]:
-    """Pull out the parts of a sentence that carry a factual claim: numbers and proper-noun-ish words."""
+    """grabs the claim-y bits of a sentence: numbers and capitalized/proper-noun-ish words"""
     tokens = set(_NUMBER_RE.findall(text))
     tokens |= {tok for tok in _PROPER_TOKEN_RE.findall(text) if tok not in _IGNORED_TOKENS}
     return tokens
@@ -59,11 +55,7 @@ def _unsupported_claims(tailored_text: str, source_resume_text: str) -> list[str
 def validate_no_fabrication(
     tailored: TailoredResume, source_resume_text: str, known_chunk_ids: set[str]
 ) -> TailoredResume:
-    """Return a copy of ``tailored`` with flagged_unsupported_claims populated.
-
-    Any pre-existing flags from the model itself are preserved; this
-    only adds to them.
-    """
+    """returns a copy of tailored with flagged_unsupported_claims filled in (adds to whatever was already there)"""
     flags: list[str] = list(tailored.flagged_unsupported_claims)
 
     for bullet in tailored.bullets:

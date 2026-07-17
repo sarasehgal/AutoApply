@@ -1,10 +1,4 @@
-"""Hash-keyed, on-disk response cache.
-
-Every LLM call is cached by a hash of (provider, system prompt, user
-prompt, temperature, expected schema). Identical calls — e.g. re-running
-the same posting twice while iterating on the UI — hit disk instead of
-paying for another API call.
-"""
+"""disk cache for llm responses, keyed by a hash of the call params so repeat calls don't cost $$"""
 
 from __future__ import annotations
 
@@ -24,7 +18,7 @@ def hash_key(*parts: str) -> str:
 
 
 class ResponseCache:
-    """Thin wrapper around diskcache so callers never touch the library directly."""
+    """wrapper so nobody has to import diskcache directly elsewhere"""
 
     def __init__(self, directory: str | None = None):
         self._cache = diskcache.Cache(directory or settings.cache_dir)

@@ -1,12 +1,7 @@
-"""No-fabrication guarantee for the Tailoring Agent.
-
-The core promise of this agent is: it may rephrase or reprioritize
-real resume content, but it must never invent a skill the candidate
-doesn't have. These tests feed a resume that deliberately lacks a
-skill the posting wants, simulate a model that (incorrectly) claims
-that skill anyway, and assert the deterministic validation pass in
-agents/tailoring.py catches it every time - independent of what the
-LLM actually produced.
+"""
+the whole point of tailoring is: rephrase real stuff, never invent a skill. these tests feed
+a resume missing a skill, fake a model that claims it anyway, and check validate_no_fabrication
+catches it every single time no matter what the "llm" said
 """
 
 from __future__ import annotations
@@ -40,7 +35,7 @@ def _posting() -> ParsedPosting:
 
 
 class FabricatingClient:
-    """Simulates a model that claims Kubernetes experience the resume never mentions."""
+    """fake model that claims kubernetes experience the resume never mentions"""
 
     def complete(self, *, system, user, response_model, temperature, agent_name):
         return TailoredResume(
@@ -61,7 +56,7 @@ class FabricatingClient:
 
 
 class HonestClient:
-    """Simulates a model that only rephrases what's actually in the resume."""
+    """fake model that only rephrases what's actually there, no funny business"""
 
     def complete(self, *, system, user, response_model, temperature, agent_name):
         return TailoredResume(
@@ -84,8 +79,8 @@ def test_fabricated_skill_is_flagged():
 
 
 def test_fabricated_skill_never_silently_passes_through():
-    """The tailored bullet text may still contain the fabricated claim, but it must always
-    be accompanied by a flag - the caller (UI) must never present it as unvalidated fact."""
+    """the bullet text might still have the fabricated claim in it, but it better come with a flag -
+    ui should never show it as unvalidated fact"""
     result = tailor_resume(_posting(), RESUME_WITHOUT_KUBERNETES, store=FakeStore(), client=FabricatingClient())
 
     bullet_mentions_kubernetes = any("Kubernetes" in b.tailored for b in result.bullets)
@@ -111,7 +106,7 @@ def test_validate_no_fabrication_catches_unknown_chunk_id():
 
 
 def test_validate_no_fabrication_ignores_common_action_verbs():
-    """Common resume verbs (Built, Led, Deployed, ...) shouldn't trip the heuristic on their own."""
+    """normal resume verbs (Built, Led, Deployed...) shouldn't trip this on their own"""
     tailored = TailoredResume(
         summary="s",
         bullets=[

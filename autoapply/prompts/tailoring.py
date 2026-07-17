@@ -1,10 +1,7 @@
-"""Prompt templates for the Tailoring Agent.
-
-This agent is the highest-risk one in the pipeline (it's the one most
-tempted to "improve" a candidate's resume by inventing things), so the
-system prompt spells the no-fabrication constraint out repeatedly and
-concretely. It is backstopped by a programmatic validation pass in
-agents/tailoring.py — the prompt alone is not trusted.
+"""
+tailoring prompts. this is the riskiest agent (most tempted to "improve" a resume by making
+stuff up) so the no-fabrication rule gets spelled out a few times. also backed up by the
+actual validation pass in agents/tailoring.py since the prompt alone isn't enough
 """
 
 from __future__ import annotations

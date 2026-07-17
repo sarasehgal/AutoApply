@@ -1,10 +1,4 @@
-"""Pydantic schemas for every agent's structured output.
-
-Centralizing these means the LLM provider layer, the orchestrator, and
-the Streamlit UI all agree on one shape per agent, and every agent
-response is validated (not just hopefully-JSON-shaped) before the rest
-of the pipeline touches it.
-"""
+"""pydantic models for what each agent spits out - keeps everything (llm layer, graph, ui) on the same page"""
 
 from __future__ import annotations
 
@@ -23,7 +17,7 @@ class Seniority(str, Enum):
 
 
 class ParsedPosting(BaseModel):
-    """Structured output of the Parser Agent."""
+    """parser output"""
 
     title: str
     company: str
@@ -44,13 +38,13 @@ class RequirementBreakdown(BaseModel):
     requirement: str
     status: CoverageStatus
     supporting_chunk_ids: list[str] = Field(
-        default_factory=list, description="IDs of resume chunks that support this judgment"
+        default_factory=list, description="chunk ids backing this up"
     )
     explanation: str
 
 
 class MatchResult(BaseModel):
-    """Structured output of the Matcher Agent."""
+    """matcher output"""
 
     score: int = Field(ge=0, le=100)
     summary: str
@@ -65,18 +59,18 @@ class TailoredBullet(BaseModel):
 
 
 class TailoredResume(BaseModel):
-    """Structured output of the Tailoring Agent."""
+    """tailoring output"""
 
     summary: str
     bullets: list[TailoredBullet] = Field(default_factory=list)
     flagged_unsupported_claims: list[str] = Field(
         default_factory=list,
-        description="Claims in the tailored output the validation pass could not trace to the source resume",
+        description="stuff the validation pass couldn't trace back to the real resume",
     )
 
 
 class CoverLetter(BaseModel):
-    """Structured output of the Cover-Letter Agent."""
+    """cover letter output"""
 
     greeting: str
     body_paragraphs: list[str] = Field(default_factory=list)

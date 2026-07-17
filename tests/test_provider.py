@@ -1,10 +1,5 @@
-"""Tests for the provider-agnostic LLM client.
-
-No real network calls are made: the OpenAI/Anthropic SDK calls are
-monkeypatched at the ``_call_openai`` / ``_call_anthropic`` boundary so
-we exercise AutoApply's own retry, fallback, caching, and structured
--output logic in isolation.
-"""
+"""tests for LLMClient. no real network calls - we monkeypatch _call_openai/_call_anthropic
+so we're only testing our retry/fallback/cache/structured-output logic, not the SDKs"""
 
 from __future__ import annotations
 
@@ -23,7 +18,7 @@ class Greeting(BaseModel):
 
 @pytest.fixture(autouse=True)
 def isolated_cache(tmp_path, monkeypatch):
-    """Point the module-level cache at a throwaway directory per test."""
+    """point the module-level cache at a tmp dir so tests don't step on each other"""
     fresh_cache = ResponseCache(directory=str(tmp_path / "cache"))
     monkeypatch.setattr(provider_module, "_cache", fresh_cache)
     yield fresh_cache

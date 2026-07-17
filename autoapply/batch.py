@@ -1,11 +1,6 @@
-"""Async batch scoring of multiple postings.
-
-A single posting can run through :func:`autoapply.graph.orchestrator.run_pipeline`
-directly. Scoring many postings at once (e.g. "score these 20 postings
-against my resume") runs them concurrently via ``asyncio``, capped by
-``settings.batch_concurrency`` so we don't blow past provider rate
-limits. One posting failing (bad URL, malformed output after retries)
-does not abort the rest of the batch.
+"""
+scores a bunch of postings at once, concurrently, capped so we don't nuke rate limits.
+one posting failing (bad url, retries exhausted etc) doesn't take the rest down with it
 """
 
 from __future__ import annotations
@@ -49,7 +44,7 @@ async def _score_one(
             latency = time.monotonic() - start
             logger.info("batch posting=%r latency=%.2fs status=ok", posting_input[:60], latency)
             return BatchResult(posting_input=posting_input, state=state, error=None, latency_seconds=latency)
-        except Exception as exc:  # noqa: BLE001 - one bad posting must not abort the batch
+        except Exception as exc:  # noqa: BLE001 - don't let one bad posting kill the whole batch
             latency = time.monotonic() - start
             logger.warning(
                 "batch posting=%r latency=%.2fs status=error error=%s", posting_input[:60], latency, exc
@@ -66,7 +61,7 @@ async def score_postings(
     store: VectorStore | None = None,
     client: LLMClient | None = None,
 ) -> list[BatchResult]:
-    """Score many postings concurrently, at most ``concurrency`` in flight at once."""
+    """runs postings concurrently, capped at `concurrency` in flight"""
     store = store or VectorStore()
     client = client or LLMClient()
     semaphore = asyncio.Semaphore(concurrency or settings.batch_concurrency)
@@ -79,11 +74,8 @@ async def score_postings(
 
 
 def _demo() -> None:
-    """Score every posting in data/sample_postings/ against data/sample_resume.md.
-
-    Run with: python -m autoapply.batch
-    Requires OPENAI_API_KEY or ANTHROPIC_API_KEY to be set in .env.
-    """
+    """scores everything in data/sample_postings/ against data/sample_resume.md
+    run: python -m autoapply.batch (needs an api key in .env)"""
     from pathlib import Path
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")

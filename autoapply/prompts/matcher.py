@@ -1,4 +1,4 @@
-"""Prompt templates for the Matcher Agent."""
+"""matcher prompts"""
 
 from __future__ import annotations
 

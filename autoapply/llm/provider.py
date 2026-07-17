@@ -1,12 +1,7 @@
-"""Provider-agnostic LLM client.
-
-Agents never import ``openai`` or ``anthropic`` directly and never
-branch on a provider name. They call :meth:`LLMClient.complete` /
-:meth:`LLMClient.acomplete` / :meth:`LLMClient.embed`, and this module
-handles: which provider is active, retry-with-backoff, request
-timeouts, automatic fallback to the secondary provider, structured
-(Pydantic-validated) output, response caching, and per-call latency
-logging.
+"""
+the one place that knows about openai/anthropic. agents just call complete()/acomplete()/embed()
+and don't care which provider is behind it. handles retries, timeouts, fallback, structured
+output validation, caching, latency logs - basically all the annoying reliability stuff
 """
 
 from __future__ import annotations
@@ -32,11 +27,11 @@ _cache = ResponseCache()
 
 
 class ProviderError(Exception):
-    """A single provider call failed (bad request, timeout, invalid JSON, ...)."""
+    """one call to one provider blew up - bad request, timeout, bad json, whatever"""
 
 
 class AllProvidersFailedError(Exception):
-    """Both the primary and fallback provider failed."""
+    """primary AND fallback both died, nothing left to try"""
 
 
 def _retryer() -> Retrying:
@@ -86,7 +81,7 @@ def _validate(raw: str, response_model: type[T]) -> T:
 
 
 class LLMClient:
-    """Provider-agnostic chat + embedding client with retry/timeout/fallback/cache."""
+    """chat + embedding client, provider swap is just a string, retry/timeout/fallback/cache all built in"""
 
     def __init__(self, provider: str | None = None):
         self.primary = (provider or settings.provider).lower()
@@ -110,7 +105,6 @@ class LLMClient:
             response_model.__name__ if response_model else "raw",
         )
         raw = _cache.get(cache_key) if (use_cache and settings.cache_enabled) else None
-        cache_hit = raw is not None
 
         if raw is None:
             start = time.monotonic()
@@ -159,10 +153,10 @@ class LLMClient:
                 raise ProviderError(f"unknown provider: {provider}")
         except ProviderError:
             raise
-        except Exception as exc:  # noqa: BLE001 - any unexpected failure should still retry/fall back
+        except Exception as exc:  # noqa: BLE001 - catch-all so retry/fallback still kicks in
             raise ProviderError(f"{provider} call failed: {exc}") from exc
         if response_model is not None:
-            _validate(raw, response_model)  # raises + triggers retry if malformed
+            _validate(raw, response_model)  # raises -> retry picks it up
         return raw
 
     # --------------------------------------------------------------- async
@@ -237,7 +231,7 @@ class LLMClient:
                 raise ProviderError(f"unknown provider: {provider}")
         except ProviderError:
             raise
-        except Exception as exc:  # noqa: BLE001 - any unexpected failure should still retry/fall back
+        except Exception as exc:  # noqa: BLE001 - catch-all so retry/fallback still kicks in
             raise ProviderError(f"{provider} call failed: {exc}") from exc
         if response_model is not None:
             _validate(raw, response_model)
@@ -271,7 +265,7 @@ class LLMClient:
                 temperature=temperature,
                 **kwargs,
             )
-        except Exception as exc:  # noqa: BLE001 - normalize every SDK error into ProviderError
+        except Exception as exc:  # noqa: BLE001 - just wrap it as ProviderError
             raise ProviderError(f"openai call failed: {exc}") from exc
         return resp.choices[0].message.content or ""
 

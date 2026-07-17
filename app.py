@@ -1,9 +1,4 @@
-"""Streamlit entry point for AutoApply.
-
-Paste (or upload) a resume, index it, then paste/URL a job posting and
-hit Analyze to run the full Parser -> Matcher -> (Tailoring |
-Cover-Letter) pipeline and view the results.
-"""
+"""streamlit app - paste your resume, index it, paste a posting, hit analyze, get results"""
 
 from __future__ import annotations
 
@@ -44,7 +39,7 @@ def run_pipeline_sync(posting_input: str, resume_text: str):
 
 
 def word_diff_markdown(original: str, tailored: str) -> str:
-    """Inline word-level diff: struck-through removals, bolded additions."""
+    """word-level diff, strikethrough for removed bits and bold for added bits"""
     original_words = original.split()
     tailored_words = tailored.split()
     matcher = difflib.SequenceMatcher(None, original_words, tailored_words)
@@ -119,7 +114,7 @@ if analyze_clicked:
                 state = run_pipeline_sync(posting_input.strip(), indexed_resume)
                 st.session_state["result_state"] = state
                 st.session_state["result_elapsed"] = time.monotonic() - start
-            except Exception as exc:  # noqa: BLE001 - surface any pipeline failure in the UI, don't crash
+            except Exception as exc:  # noqa: BLE001 - show it in the ui instead of crashing
                 st.error(f"Pipeline failed: {exc}")
 
 state = st.session_state.get("result_state")
