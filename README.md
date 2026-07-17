@@ -191,8 +191,12 @@ No server-side state besides the local Chroma store + disk cache, so it deploys 
 
 **Live demo:** _(link goes here once deployed)_
 
-**Demo GIF:** _(goes here — recording one needs a real API key, which isn't set in the environment
-this was built in)_
+**Demo GIF:**
+
+![AutoApply demo — index a resume, analyze a posting, get score + tailored resume + cover letter](docs/demo.gif)
+
+(sample resume + a senior ML posting, real Gemini calls — 95/100 match, and the fabrication
+check actually caught a word the model swapped in that wasn't in the source resume)
 
 ## What I'd build next
 
