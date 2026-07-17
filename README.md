@@ -47,8 +47,8 @@ flowchart LR
 The orchestrator is a [LangGraph](https://github.com/langchain-ai/langgraph) `StateGraph`:
 `Parser → Matcher → (Tailoring ‖ Cover-Letter)`. Tailoring and Cover-Letter only depend on the
 Matcher's output, not on each other, so they're two edges out of `matcher` — LangGraph runs them
-concurrently instead of one after the other (verified this actually happens, not just assumed —
-see Design notes below).
+concurrently instead of one after the other, reducing end-to-end latency versus a fully
+sequential pipeline (see Design notes below for how this was verified).
 
 | Agent | Input | Output | Grounding |
 |---|---|---|---|
@@ -240,7 +240,12 @@ check actually caught a word the model swapped in that wasn't in the source resu
 - **Why Tailoring and Cover-Letter share retrieval** ([`agents/matcher.py`](autoapply/agents/matcher.py)):
   `gather_grounding_chunks()` / `format_chunks()` are reused by all three post-Parser agents, one
   place decides how a posting's requirements map to retrieval queries.
-- **Confirmed the concurrent branch is actually concurrent**: ran the orchestrator with a fake
-  client that sleeps 0.4s in both the tailoring and cover-letter calls — total pipeline time came
-  out to ~0.41s, not ~0.8s, so LangGraph really is running them in parallel and not just looking
-  like it on paper.
+- **Confirmed the concurrent branch is actually concurrent, not just concurrent on paper**: ran
+  the orchestrator with a fake client that introduces an artificial delay in both the tailoring
+  and cover-letter calls and confirmed the two calls overlap in wall-clock time instead of running
+  one after the other — proof LangGraph is actually scheduling them in the same superstep. Didn't
+  publish a specific real-LLM before/after number here: provider latency varies enough call to
+  call (and this was built against a free-tier API key with an aggressive daily rate limit) that
+  a single measurement would misrepresent itself as a stable benchmark. The architectural claim -
+  independent agents run concurrently, cutting end-to-end latency versus a sequential pipeline -
+  holds regardless.
