@@ -6,6 +6,8 @@ import asyncio
 import difflib
 import logging
 import time
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 
 import streamlit as st
@@ -126,8 +128,36 @@ if analyze_clicked:
                 state = run_pipeline_sync(posting_input.strip(), indexed_resume)
                 st.session_state["result_state"] = state
                 st.session_state["result_elapsed"] = time.monotonic() - start
+                get_store().add_postings(
+                    [
+                        {
+                            "id": f"posting-{uuid.uuid4().hex[:12]}",
+                            "text": posting_input.strip(),
+                            "title": state["parsed_posting"].title,
+                            "company": state["parsed_posting"].company,
+                            "score": state["match_result"].score,
+                            "analyzed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                        }
+                    ]
+                )
             except Exception as exc:  # noqa: BLE001 - show it in the ui instead of crashing
                 st.error(f"Pipeline failed: {exc}")
+
+with st.expander("🔍 Search past postings"):
+    history_query = st.text_input("Search postings you've already analyzed", key="history_query")
+    if history_query.strip():
+        hits = get_store().search_postings(history_query.strip(), n_results=5)
+        if not hits:
+            st.caption("No past postings match that yet.")
+        for hit in hits:
+            meta = hit["metadata"]
+            title = meta.get("title", "Untitled posting")
+            company = meta.get("company", "Unknown company")
+            score = meta.get("score")
+            when = meta.get("analyzed_at", "")
+            score_str = f"{score}/100" if score is not None else "n/a"
+            st.markdown(f"**{title}** at **{company}** — score {score_str}")
+            st.caption(when)
 
 state = st.session_state.get("result_state")
 if state:
