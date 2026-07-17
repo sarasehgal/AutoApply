@@ -1,0 +1,23 @@
+Data Scientist — Healthcare Analytics
+
+We're building analytics tools for hospital systems to reduce patient readmission rates. We're
+looking for a Data Scientist to join our small, senior team.
+
+What you'll do:
+- Build statistical and machine learning models to predict patient readmission risk.
+- Design and run experiments (A/B tests, causal inference) to evaluate intervention programs.
+- Communicate findings clearly to clinical and non-technical stakeholders.
+- Partner with data engineering to ensure clean, well-documented data pipelines.
+
+Required qualifications:
+- Master's or PhD in Statistics, Biostatistics, Computer Science, or a related quantitative field.
+- 3+ years of experience applying statistical modeling or machine learning to real-world problems.
+- Strong SQL skills and experience with R or Python for statistical analysis.
+- Experience with causal inference or clinical/healthcare data is a strong plus.
+
+Preferred qualifications:
+- Experience with survival analysis or longitudinal patient data.
+- Familiarity with HIPAA-compliant data handling practices.
+- Experience presenting to non-technical clinical stakeholders.
+
+Seniority: Mid-to-Senior

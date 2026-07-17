@@ -1,0 +1,25 @@
+Senior Machine Learning Engineer — Acme Recommendations
+
+Acme Recommendations builds personalization infrastructure for e-commerce platforms. We're
+hiring a Senior ML Engineer to own the core recommendation system that serves millions of
+users daily.
+
+What you'll do:
+- Design, build, and ship machine learning models that power product recommendations at scale.
+- Own the full lifecycle: data pipeline, training, evaluation, deployment, and monitoring.
+- Partner with product and data science to translate business goals into ML problems.
+- Improve retrieval-augmented systems that ground model outputs in real product/catalog data.
+- Mentor junior engineers and help set technical direction for the ML platform team.
+
+Required qualifications:
+- 4+ years of experience building and deploying machine learning systems in production.
+- Strong Python skills; hands-on experience with PyTorch or a comparable deep learning framework.
+- Experience with recommendation systems, ranking, or personalization.
+- Experience with cloud infrastructure (AWS, GCP, or Azure) and containerized deployments (Docker/Kubernetes).
+
+Preferred qualifications:
+- Experience with retrieval-augmented generation (RAG), vector databases, or LLM-based systems.
+- Experience with LangChain or similar orchestration frameworks.
+- Experience mentoring or leading a small team of engineers.
+
+Seniority: Senior (4+ years experience)

@@ -1,0 +1,23 @@
+Backend Software Engineer — Fintech Startup
+
+We're a Series B fintech startup building payment infrastructure for small businesses. We're
+looking for a Backend Software Engineer to help scale our core transaction platform.
+
+Responsibilities:
+- Design and build REST/GraphQL APIs that process financial transactions reliably at scale.
+- Improve our CI/CD pipeline and deployment process to ship safely and frequently.
+- Write thorough tests and participate in code review to keep the codebase healthy.
+- Collaborate with frontend, product, and compliance teams on new features.
+
+Required skills:
+- 3+ years professional experience with Python or a similar backend language.
+- Experience with a modern web framework (FastAPI, Django, Flask, or similar).
+- Experience with relational databases (PostgreSQL preferred) and writing efficient SQL.
+- Experience with CI/CD tooling (GitHub Actions, CircleCI, or similar).
+
+Nice to have:
+- Experience with Docker and Kubernetes.
+- Experience with GraphQL API design.
+- Prior experience in fintech or another regulated industry.
+
+Seniority: Mid-level (3-5 years)
