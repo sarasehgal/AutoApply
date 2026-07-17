@@ -152,6 +152,8 @@ streamlit run app.py
 2. Paste a posting (or its URL), hit **Analyze**.
 3. Get the score + weighted breakdown, a tailored resume (word-level diff per bullet, plus any
    fabrication warnings, downloadable as .txt or .pdf), and a cover letter.
+4. Every posting you analyze gets indexed too — use **Search past postings** to semantically
+   search everything you've run so far.
 
 ## Batch mode
 
@@ -206,8 +208,8 @@ check actually caught a word the model swapped in that wasn't in the source resu
 
 ## What I'd build next
 
-- A "history" view backed by `search_postings()` — see all past postings you matched against and
-  re-open any of them.
+- Persist full results (not just title/company/score) so a past posting from the history search
+  can be fully re-opened, not just found.
 - A small eval set (a few postings + expected coverage) to catch prompt regressions instead of
   eyeballing it.
 
