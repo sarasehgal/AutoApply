@@ -23,7 +23,7 @@ AGENT_NAME = "matcher"
 DEFAULT_CHUNKS_PER_QUERY = 4
 
 
-def _gather_grounding_chunks(
+def gather_grounding_chunks(
     posting: ParsedPosting,
     store: VectorStore,
     resume_id: str,
@@ -48,7 +48,7 @@ def _gather_grounding_chunks(
     return chunks
 
 
-def _format_chunks(chunks: list[dict]) -> str:
+def format_chunks(chunks: list[dict]) -> str:
     if not chunks:
         return "(no resume chunks found - the resume may not be indexed yet)"
     return "\n".join(f"[{c['id']}] {c['text']}" for c in chunks)
@@ -62,12 +62,12 @@ def match_posting(
     client: LLMClient | None = None,
 ) -> MatchResult:
     store = store or VectorStore()
-    chunks = _gather_grounding_chunks(posting, store, resume_id)
+    chunks = gather_grounding_chunks(posting, store, resume_id)
 
     client = client or LLMClient()
     return client.complete(
         system=prompts.SYSTEM_PROMPT,
-        user=prompts.build_user_prompt(posting, _format_chunks(chunks)),
+        user=prompts.build_user_prompt(posting, format_chunks(chunks)),
         response_model=MatchResult,
         temperature=0.1,
         agent_name=AGENT_NAME,
@@ -85,12 +85,12 @@ async def amatch_posting(
     # Chroma's client is sync-only; offload to the default executor so it
     # doesn't block the event loop during concurrent batch scoring.
     loop = asyncio.get_running_loop()
-    chunks = await loop.run_in_executor(None, _gather_grounding_chunks, posting, store, resume_id)
+    chunks = await loop.run_in_executor(None, gather_grounding_chunks, posting, store, resume_id)
 
     client = client or LLMClient()
     return await client.acomplete(
         system=prompts.SYSTEM_PROMPT,
-        user=prompts.build_user_prompt(posting, _format_chunks(chunks)),
+        user=prompts.build_user_prompt(posting, format_chunks(chunks)),
         response_model=MatchResult,
         temperature=0.1,
         agent_name=AGENT_NAME,
