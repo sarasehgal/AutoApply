@@ -11,7 +11,7 @@ from pathlib import Path
 import streamlit as st
 
 from autoapply.graph.orchestrator import run_pipeline
-from autoapply.llm.provider import LLMClient
+from autoapply.llm.provider import LLMClient, clear_cache
 from autoapply.rag.store import VectorStore
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -91,6 +91,12 @@ with st.sidebar:
 
     if st.session_state.get("indexed_resume_text"):
         st.caption("Resume is indexed and ready.")
+
+    with st.expander("Advanced"):
+        st.caption("Every LLM call is cached on disk. Clear it to force fresh calls (e.g. after tweaking a prompt).")
+        if st.button("Clear cache"):
+            clear_cache()
+            st.success("Cache cleared.")
 
 st.subheader("Job posting")
 input_mode = st.radio("Input type", ["Paste text", "URL"], horizontal=True)

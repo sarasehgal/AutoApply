@@ -28,6 +28,11 @@ T = TypeVar("T", bound=BaseModel)
 _cache = ResponseCache()
 
 
+def clear_cache() -> None:
+    """wipes every cached llm response - the only way to force a fresh call for something already cached"""
+    _cache.clear()
+
+
 class ProviderError(Exception):
     """one call to one provider blew up - bad request, timeout, bad json, whatever"""
 
