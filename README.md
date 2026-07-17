@@ -183,10 +183,25 @@ for r in results:
 pytest
 ```
 
-22 tests, all passing: provider layer (retry/fallback/structured-output/caching, sync+async, all
-mocked at the SDK boundary — no real network calls), matcher retrieval/grounding, and the
-no-fabrication guarantee (feed a resume missing a skill, have a fake model claim it anyway, assert
-the validation pass catches it every time).
+29 tests, all passing: provider layer (retry/fallback/structured-output/caching, sync+async, all
+mocked at the SDK boundary — no real network calls), matcher retrieval/grounding/weighted-scoring,
+and the no-fabrication guarantee (feed a resume missing a skill, have a fake model claim it
+anyway, assert the validation pass catches it every time).
+
+### Eval harness
+
+`pytest` never calls a real LLM, so it can't catch "I tweaked the matcher prompt and it got
+worse." [`evals/`](evals) is a small separate harness for that: a couple of resume/posting pairs
+with hand-picked expectations (`data/sample_resume.md` should show as covered for Python/PyTorch/
+Kubernetes against the ML posting, missing Ranking/Personalization; missing React/TypeScript
+entirely against the frontend posting). Run by hand after touching a prompt:
+
+```bash
+python -m evals.run_matcher_eval
+```
+
+Needs a real API key and costs real tokens, so it's intentionally not part of the pytest run or
+CI — it's a spot-check, not a gate.
 
 ## Deploy
 
@@ -210,8 +225,8 @@ check actually caught a word the model swapped in that wasn't in the source resu
 
 - Persist full results (not just title/company/score) so a past posting from the history search
   can be fully re-opened, not just found.
-- A small eval set (a few postings + expected coverage) to catch prompt regressions instead of
-  eyeballing it.
+- Grow the eval set past 2 cases, and wire it into CI behind a secret so prompt regressions get
+  caught automatically instead of by hand.
 
 ## Design notes
 
